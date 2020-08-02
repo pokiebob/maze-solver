@@ -8,7 +8,7 @@ class Maze:
     MAZE_END = "E"
     
     def __init__(self, numRows, numCols):
-        self._mazeCells = [[' ' for i in range(numCols)] for i in range(numRows)]
+        self._mazeCells = [[' ' for col in range(numCols)] for row in range(numRows)]
         self._startCell = None
         self._exitCell = None
         self.numRows = numRows
@@ -36,7 +36,11 @@ class Maze:
 
         while True:
             if self.stack == deque([]):
-                self.stack.append(self._startCell.returnStart())
+                self.stack.append(self._startCell.returnPos())
+
+            elif self._exitFound(self.stack[-1][0], self.stack[-1][1]):
+                print('Maze Complete!')
+                break
 
             elif self._validMove(self.stack[-1][0]-1, self.stack[-1][1]):
                 self.stack.append([self.stack[-1][0]-1, self.stack[-1][1]])
@@ -46,17 +50,11 @@ class Maze:
 
             elif self._validMove(self.stack[-1][0]+1, self.stack[-1][1]):
                 self.stack.append([self.stack[-1][0]+1, self.stack[-1][1]])
-                
 
             elif self._validMove(self.stack[-1][0], self.stack[-1][1]+1):
                 self.stack.append([self.stack[-1][0], self.stack[-1][1]+1])
 
-
-            elif self._exitFound(self.stack[-1][0], self.stack[-1][1]):
-                print('Maze Complete!')
-                break
-
-            elif self.stack != deque([self._startCell.returnStart]):
+            elif self.stack != deque([self._startCell.returnPos]):
                 self._markTried(self.stack[-1][0], self.stack[-1][1])
                 self.stack.pop()
 
@@ -68,8 +66,8 @@ class Maze:
         self.draw()
             
     def reset(self):
-        
         self.stack = deque()
+        self._mazeCells = [['{}'.format(' ' if (self._mazeCells[row][col] == ' ' or (self._mazeCells[row][col] == 'x' and not self._exitFound(col, row) and not self._startFound(col, row)) or self._mazeCells[row][col] == 'o') else '{}'.format('*' if self._mazeCells[row][col] == '*' else '{}'.format('E' if self._exitFound(col, row) else 'S'))) for col in range(self.numCols)] for row in range(self.numRows)]
         
     def draw(self):
         for i in range(self.numRows):
@@ -80,11 +78,14 @@ class Maze:
             print('|' + row)
         print(' ---' * self.numCols)
         
-    def _validMove(self, row, col):
-        return row >= 0 and row < self.numRows and col >= 0 and col < self.numCols and (self._mazeCells[col][row] == ' ' or self._exitFound(row, col))
+    def _validMove(self, col, row):
+        return (row >= 0 and row < self.numRows) and (col >= 0 and col < self.numCols) and ( self._mazeCells[row][col] == ' ' or self._exitFound(col, row))
 
     def _exitFound(self, row, col):
         return row == self._exitCell.row and col == self._exitCell.col
+
+    def _startFound(self, row, col):
+        return row == self._startCell.row and col == self._startCell.col
     
     def _markTried(self, row, col):
         self._mazeCells[col][row] = self.TRIED_TOKEN
@@ -97,7 +98,7 @@ class _CellPosition(object):
         self.row = row
         self.col = col
 
-    def returnStart(self):
+    def returnPos(self):
         return self.row, self.col
 
 
@@ -113,17 +114,26 @@ def setMaze():
     myMaze.setWall(2,1)
     myMaze.setWall(4,1)
     myMaze.setWall(0,2)
-    myMaze.setWall(4,2)
-    myMaze.setWall(0,3)
     myMaze.setWall(2,3)
     myMaze.setWall(0,4)
     myMaze.setWall(2,4)
-    myMaze.setWall(3,4)
-    myMaze.setWall(4,4)
-    myMaze.setStart(1,4)
-    myMaze.setExit(4,3)
+    myMaze.setWall(3,3)
+    myMaze.setWall(4,3)
+    myMaze.setWall(5,0)
+    myMaze.setWall(6,0)
+    myMaze.setWall(6,2)
+    myMaze.setWall(6,3)
+    myMaze.setStart(0,3)
+    myMaze.setExit(3,4)
 
-myMaze = Maze(5, 5)
+myMaze = Maze(5, 7)
+print('set maze:')
 setMaze()
 myMaze.draw()
+
+print('solve maze:')
 myMaze.findPath()
+
+print('reset maze:')
+myMaze.reset()
+myMaze.draw()
